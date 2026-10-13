@@ -1,0 +1,66 @@
+// [name, category, primary muscle, equipment, instructions]
+export const SEED_EXERCISES: [string, string, string, string, string][] = [
+  ["Barbell Bench Press", "Strength", "Chest", "Barbell", "Shoulder blades pinched, feet planted. Lower to mid-chest, press straight up."],
+  ["Incline Dumbbell Press", "Strength", "Chest", "Dumbbell", "Bench at 30°. Press up and slightly in, control the way down."],
+  ["Push-up", "Bodyweight", "Chest", "None", "Body in a straight line. Chest to floor, elbows ~45°."],
+  ["Dumbbell Fly", "Strength", "Chest", "Dumbbell", "Soft elbows, wide arc, stretch then squeeze."],
+  ["Cable Crossover", "Strength", "Chest", "Cable", "Slight lean forward. Sweep hands together in front of chest."],
+  ["Overhead Press", "Strength", "Shoulders", "Barbell", "Brace core, press bar overhead, head through at the top."],
+  ["Dumbbell Shoulder Press", "Strength", "Shoulders", "Dumbbell", "Press from shoulder height to lockout without arching."],
+  ["Lateral Raise", "Strength", "Shoulders", "Dumbbell", "Lead with elbows to shoulder height. No swinging."],
+  ["Face Pull", "Strength", "Rear delts", "Cable", "Pull rope to face, elbows high, squeeze shoulder blades."],
+  ["Rear Delt Fly", "Strength", "Rear delts", "Dumbbell", "Hinge forward, raise arms out to the sides."],
+  ["Deadlift", "Strength", "Back", "Barbell", "Bar over mid-foot, flat back. Push the floor away, lock hips."],
+  ["Romanian Deadlift", "Strength", "Hamstrings", "Barbell", "Soft knees, hips back, bar close to legs. Feel hamstrings stretch."],
+  ["Pull-up", "Bodyweight", "Back", "Pull-up bar", "Start from a dead hang. Drive elbows down, chin over bar."],
+  ["Chin-up", "Bodyweight", "Back", "Pull-up bar", "Underhand grip. Pull chest toward the bar."],
+  ["Lat Pulldown", "Strength", "Back", "Cable", "Lean slightly back, pull bar to upper chest."],
+  ["Barbell Row", "Strength", "Back", "Barbell", "Hinge to ~45°, pull bar to lower ribs."],
+  ["One-arm Dumbbell Row", "Strength", "Back", "Dumbbell", "Hand on bench, pull elbow toward hip."],
+  ["Seated Cable Row", "Strength", "Back", "Cable", "Sit tall, pull handle to belly, pause."],
+  ["Back Squat", "Strength", "Quads", "Barbell", "Bar on upper back, brace, sit between hips to depth, drive up."],
+  ["Front Squat", "Strength", "Quads", "Barbell", "Elbows high, upright torso, full depth."],
+  ["Goblet Squat", "Strength", "Quads", "Dumbbell", "Hold weight at chest. Elbows inside knees at the bottom."],
+  ["Bulgarian Split Squat", "Strength", "Quads", "Dumbbell", "Rear foot on bench. Drop straight down, front heel planted."],
+  ["Walking Lunge", "Strength", "Quads", "Dumbbell", "Long steps, torso tall, back knee kisses the floor."],
+  ["Leg Press", "Strength", "Quads", "Machine", "Feet shoulder-width. Lower until knees ~90°, don't lock out hard."],
+  ["Leg Extension", "Strength", "Quads", "Machine", "Squeeze at the top, slow lower."],
+  ["Leg Curl", "Strength", "Hamstrings", "Machine", "Curl heels to glutes, control the return."],
+  ["Hip Thrust", "Strength", "Glutes", "Barbell", "Upper back on bench. Drive hips up, squeeze glutes, chin tucked."],
+  ["Glute Bridge", "Bodyweight", "Glutes", "None", "Feet flat, drive hips up, pause at the top."],
+  ["Standing Calf Raise", "Strength", "Calves", "Machine", "Full stretch at bottom, rise onto toes, pause."],
+  ["Barbell Curl", "Strength", "Biceps", "Barbell", "Elbows pinned to sides. Curl up, lower slowly."],
+  ["Dumbbell Hammer Curl", "Strength", "Biceps", "Dumbbell", "Neutral grip, curl without swinging."],
+  ["Triceps Pushdown", "Strength", "Triceps", "Cable", "Elbows pinned. Press down to full extension."],
+  ["Skull Crusher", "Strength", "Triceps", "Barbell", "Lower bar toward forehead, extend with elbows fixed."],
+  ["Dip", "Bodyweight", "Triceps", "Dip bars", "Lean slightly forward. Lower to 90° elbows, press up."],
+  ["Plank", "Bodyweight", "Core", "None", "Forearms down, body straight, squeeze glutes. Hold for time."],
+  ["Side Plank", "Bodyweight", "Core", "None", "Stack feet, lift hips, hold a straight line."],
+  ["Hanging Leg Raise", "Bodyweight", "Core", "Pull-up bar", "Raise legs without swinging, control down."],
+  ["Cable Crunch", "Strength", "Core", "Cable", "Round the spine to bring ribs to hips."],
+  ["Dead Bug", "Bodyweight", "Core", "None", "Low back flat. Extend opposite arm and leg slowly."],
+  ["Farmer's Carry", "Strength", "Grip", "Dumbbell", "Tall posture, brisk steps, hold for time or distance."],
+  ["Cat-Cow", "Mobility", "Spine", "None", "On all fours. Alternate arching and rounding with your breath."],
+  ["Child's Pose", "Mobility", "Back", "None", "Sit hips back to heels, arms long, breathe."],
+  ["World's Greatest Stretch", "Mobility", "Hips", "None", "Deep lunge, elbow to instep, rotate and reach to the sky."],
+  ["90/90 Hip Switch", "Mobility", "Hips", "None", "Sit with both knees at 90°. Rotate side to side."],
+  ["Thoracic Rotation", "Mobility", "Upper back", "None", "On all fours, hand behind head. Rotate elbow to ceiling."],
+  ["Hip Flexor Stretch", "Mobility", "Hips", "None", "Half-kneeling, tuck pelvis, shift forward gently."],
+  ["Hamstring Stretch", "Mobility", "Hamstrings", "None", "Heel on a low surface, hinge forward with a flat back."],
+  ["Shoulder Dislocate", "Mobility", "Shoulders", "Band", "Hold band wide, rotate it over head and behind you."],
+  ["Couch Stretch", "Mobility", "Quads", "None", "Knee near wall, shin up the wall, squeeze glute."],
+  ["Ankle Dorsiflexion Rock", "Mobility", "Ankles", "None", "Knee drives forward over toes, heel stays down."],
+  ["Foam Roll Upper Back", "Mobility", "Upper back", "Foam roller", "Roll slowly from mid to upper back, hands behind head."],
+  ["Pigeon Pose", "Mobility", "Glutes", "None", "Front shin across, fold forward and breathe."],
+  ["Jump Rope", "Cardio", "Full body", "Jump rope", "Light bounces on the balls of the feet. Log duration."],
+  ["Rowing Machine", "Cardio", "Full body", "Machine", "Legs, hips, then arms. Log duration."],
+];
+
+export function seedExercises(db: import("better-sqlite3").Database) {
+  const n = (db.prepare("SELECT COUNT(*) c FROM exercises").get() as { c: number }).c;
+  if (n > 0) return;
+  const ins = db.prepare("INSERT INTO exercises (id,name,category,primary_muscle,equipment,instructions) VALUES (?,?,?,?,?,?)");
+  db.transaction(() => {
+    for (const [name, cat, muscle, eq, ins_] of SEED_EXERCISES) ins.run(crypto.randomUUID(), name, cat, muscle, eq, ins_);
+  })();
+}
