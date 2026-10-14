@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import TagEditor from "./TagEditor";
 import { saveProgramAction, startProgramAction, archiveProgramAction } from "@/app/actions";
 import { WEEKDAYS, mondayOf } from "@/lib/dates";
 import { Plus, X } from "lucide-react";
@@ -9,9 +10,10 @@ type W = { id: string; name: string };
 type Slot = { key: string; workoutId: string; day: number };
 const k = () => Math.random().toString(36).slice(2);
 
-export default function ProgramEditor({ id, initial, workouts, today }: { id?: string; initial: { name: string; weeks: number; slots: { workoutId: string; day: number }[] }; workouts: W[]; today: string }) {
+export default function ProgramEditor({ id, initial, workouts, today, allTags = [] }: { id?: string; initial: { name: string; weeks: number; tags?: string[]; slots: { workoutId: string; day: number }[] }; workouts: W[]; today: string; allTags?: string[] }) {
   const r = useRouter();
   const [name, setName] = useState(initial.name);
+  const [tags, setTags] = useState<string[]>(initial.tags ?? []);
   const [weeks, setWeeks] = useState(String(initial.weeks));
   const [slots, setSlots] = useState<Slot[]>(initial.slots.map((s) => ({ ...s, key: k() })));
   const [error, setError] = useState("");
@@ -22,7 +24,7 @@ export default function ProgramEditor({ id, initial, workouts, today }: { id?: s
 
   const save = () => run(async () => {
     setError(""); setMsg("");
-    const res = await saveProgramAction({ id, name, weeks: Number(weeks), slots: slots.map((s) => ({ workoutId: s.workoutId, isoWeekday: s.day })) });
+    const res = await saveProgramAction({ id, name, tags, weeks: Number(weeks), slots: slots.map((s) => ({ workoutId: s.workoutId, isoWeekday: s.day })) });
     if (res.ok) { if (!id) r.replace(`/programs/${res.id}/edit`); else { setMsg("Saved"); r.refresh(); } } else setError(res.error);
   });
   const startIt = () => run(async () => {
@@ -38,6 +40,8 @@ export default function ProgramEditor({ id, initial, workouts, today }: { id?: s
       <h1 className="h1">{id ? "Edit program" : "New program"}</h1>
       <label className="block"><span className="label">Name</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Push / Pull / Legs" /></label>
       <label className="block"><span className="label">Weeks</span><input className="input" inputMode="numeric" value={weeks} onChange={(e) => setWeeks(e.target.value)} /></label>
+
+      <TagEditor value={tags} suggestions={allTags} onChange={setTags} />
 
       <section className="space-y-2">
         <h2 className="h2">Weekly schedule</h2>

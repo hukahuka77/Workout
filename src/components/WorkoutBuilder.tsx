@@ -7,6 +7,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, ChevronUp, ChevronDown, Copy, Trash2, Plus } from "lucide-react";
 import Thumb from "./Thumb";
 import ExercisePicker from "./ExercisePicker";
+import TagEditor from "./TagEditor";
 import { saveWorkoutAction } from "@/app/actions";
 import { toKg, fromKg, type Unit } from "@/lib/units";
 import type { ExerciseRow } from "@/lib/queries";
@@ -15,7 +16,7 @@ type SetState = { key: string; reps: string; weight: string; dur: string; rest: 
 type ExState = { key: string; exerciseId: string; name: string; imagePath: string | null; open: boolean; sets: SetState[] };
 
 export type InitialWorkout = {
-  id?: string; name: string;
+  id?: string; name: string; tags?: string[];
   exercises: { exerciseId: string; name: string; imagePath: string | null; sets: { reps: number | null; weightKg: number | null; durationSec: number | null; restSec: number | null }[] }[];
 };
 
@@ -23,12 +24,13 @@ const k = () => Math.random().toString(36).slice(2);
 const s2 = (n: number | null) => (n == null ? "" : String(n));
 const num = (v: string) => (v.trim() === "" ? null : Number(v));
 
-export default function WorkoutBuilder({ initial, exercises, unit }: { initial: InitialWorkout; exercises: ExerciseRow[]; unit: Unit }) {
+export default function WorkoutBuilder({ initial, exercises, unit, allTags = [] }: { initial: InitialWorkout; exercises: ExerciseRow[]; unit: Unit; allTags?: string[] }) {
   const router = useRouter();
   const [name, setName] = useState(initial.name);
   const [items, setItems] = useState<ExState[]>(() =>
     initial.exercises.map((e) => ({ key: k(), exerciseId: e.exerciseId, name: e.name, imagePath: e.imagePath, open: true, sets: e.sets.map((s) => ({ key: k(), reps: s2(s.reps), weight: s.weightKg == null ? "" : String(fromKg(s.weightKg, unit)), dur: s2(s.durationSec), rest: s2(s.restSec) })) })),
   );
+  const [tags, setTags] = useState<string[]>(initial.tags ?? []);
   const [picker, setPicker] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState("");
@@ -54,7 +56,7 @@ export default function WorkoutBuilder({ initial, exercises, unit }: { initial: 
       setError("");
       if (!name.trim()) return setError("Add a name");
       const payload = {
-        id: initial.id, name,
+        id: initial.id, name, tags,
         exercises: items.map((e) => ({
           exerciseId: e.exerciseId,
           sets: e.sets.map((s) => ({ reps: num(s.reps), weightKg: num(s.weight) == null ? null : toKg(num(s.weight)!, unit), durationSec: num(s.dur), restSec: num(s.rest) })),
@@ -72,6 +74,8 @@ export default function WorkoutBuilder({ initial, exercises, unit }: { initial: 
         <h1 className="h1">{initial.id ? "Edit workout" : "New workout"}</h1>
       </div>
       <label className="block"><span className="label">Name</span><input className="input" value={name} onChange={(e) => { setName(e.target.value); setDirty(true); }} placeholder="Upper strength" /></label>
+
+      <TagEditor value={tags} suggestions={allTags} onChange={(t) => { setTags(t); setDirty(true); }} />
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={items.map((i) => i.key)} strategy={verticalListSortingStrategy}>

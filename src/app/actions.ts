@@ -11,6 +11,7 @@ import { COOKIE, requireUser, requireAdmin } from "@/lib/auth";
 import { createUser, verifyLogin, createAuthSession, hashToken } from "@/lib/auth-core";
 import * as svc from "@/lib/service";
 import { mediaDir } from "@/lib/media";
+import * as tagsvc from "@/lib/tags";
 
 type Result<T = {}> = ({ ok: true } & T) | { ok: false; error: string };
 const fail = (e: unknown): { ok: false; error: string } => ({ ok: false, error: e instanceof svc.AppError ? e.message : e instanceof z.ZodError ? "Invalid input" : "Something went wrong" });
@@ -67,7 +68,7 @@ const setSchema = z.object({
   durationSec: z.number().int().min(0).nullable(), restSec: z.number().int().min(0).nullable(),
 });
 const workoutSchema = z.object({
-  id: z.string().optional(), name: z.string().min(1).max(80), description: z.string().max(500).nullish(),
+  id: z.string().optional(), tags: z.array(z.string().max(60)).max(20).optional(), name: z.string().min(1).max(80), description: z.string().max(500).nullish(),
   exercises: z.array(z.object({ exerciseId: z.string(), notes: z.string().max(500).nullish(), sets: z.array(setSchema).max(30) })).max(40),
 });
 
@@ -91,7 +92,7 @@ export async function saveProgramAction(input: unknown): Promise<Result<{ id: st
   const u = await requireUser();
   try {
     const v = z.object({
-      id: z.string().optional(), name: z.string().min(1).max(80), description: z.string().max(500).nullish(), weeks: z.number().int().min(1).max(52),
+      id: z.string().optional(), tags: z.array(z.string().max(60)).max(20).optional(), name: z.string().min(1).max(80), description: z.string().max(500).nullish(), weeks: z.number().int().min(1).max(52),
       slots: z.array(z.object({ workoutId: z.string(), isoWeekday: z.number().int().min(1).max(7) })).max(60),
     }).parse(input);
     const id = svc.saveProgram(getDb(), u.id, v);
@@ -198,4 +199,23 @@ export async function adminSaveExercise(_: unknown, fd: FormData): Promise<{ ok?
     if (String(e?.message).includes("UNIQUE")) return { error: "An exercise with that name already exists" };
     return { error: "Check the fields and try again" };
   }
+}
+
+/* ---------- tags ---------- */
+export async function setTagsAction(type: "exercise" | "workout" | "program", entityId: string, names: string[]): Promise<Result<{ tags: tagsvc.Tag[] }>> {
+  const u = await requireUser();
+  try {
+    z.enum(["exercise", "workout", "program"]).parse(type);
+    const tags = tagsvc.setTags(getDb(), u.id, type, entityId, z.array(z.string()).max(40).parse(names));
+    revalidatePath("/exercises"); revalidatePath("/workouts"); revalidatePath("/settings");
+    return { ok: true, tags };
+  } catch (e) { return fail(e); }
+}
+export async function renameTagAction(id: string, name: string): Promise<Result> {
+  const u = await requireUser();
+  try { tagsvc.renameTag(getDb(), u.id, id, name); revalidatePath("/", "layout"); return { ok: true }; } catch (e) { return fail(e); }
+}
+export async function deleteTagAction(id: string): Promise<Result> {
+  const u = await requireUser();
+  try { tagsvc.deleteTag(getDb(), u.id, id); revalidatePath("/", "layout"); return { ok: true }; } catch (e) { return fail(e); }
 }

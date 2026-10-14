@@ -2,6 +2,7 @@ import type Database from "better-sqlite3";
 import { uid, nowIso } from "./db";
 import { expandProgram } from "./dates";
 import { newPRs, volumeKg, type SetResult } from "./pr";
+import { setTags } from "./tags";
 
 type DB = Database.Database;
 export class AppError extends Error {}
@@ -13,6 +14,7 @@ const must = <T>(v: T | undefined | null, msg = "Not found"): T => {
 /* ---------------- Workouts ---------------- */
 export type WorkoutInput = {
   id?: string;
+  tags?: string[];
   name: string;
   description?: string | null;
   exercises: {
@@ -43,6 +45,7 @@ export function saveWorkout(db: DB, userId: string, input: WorkoutInput): string
         db.prepare("INSERT INTO workout_sets (id,user_id,workout_exercise_id,sort_order,target_reps,target_weight_kg,target_duration_sec,target_rest_sec) VALUES (?,?,?,?,?,?,?,?)").run(uid(), userId, weId, j, s.reps, s.weightKg, s.durationSec, s.restSec);
       });
     });
+    if (input.tags) setTags(db, userId, "workout", id!, input.tags);
     return id!;
   })();
 }
@@ -78,6 +81,7 @@ export function setWorkoutArchived(db: DB, userId: string, id: string, archived:
 /* ---------------- Programs ---------------- */
 export type ProgramInput = {
   id?: string;
+  tags?: string[];
   name: string;
   description?: string | null;
   weeks: number;
@@ -103,6 +107,7 @@ export function saveProgram(db: DB, userId: string, input: ProgramInput): string
       if (s.isoWeekday < 1 || s.isoWeekday > 7) throw new AppError("Invalid weekday");
       db.prepare("INSERT INTO program_workouts (id,user_id,program_id,workout_id,iso_weekday,sort_order) VALUES (?,?,?,?,?,?)").run(uid(), userId, id, s.workoutId, s.isoWeekday, i);
     });
+    if (input.tags) setTags(db, userId, "program", id!, input.tags);
     return id!;
   })();
 }

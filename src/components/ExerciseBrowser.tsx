@@ -4,17 +4,23 @@ import Link from "next/link";
 import { Search, X } from "lucide-react";
 import Thumb from "./Thumb";
 import type { ExerciseRow, MuscleRow, Region } from "@/lib/queries";
+import TagEditor, { TagChips } from "./TagEditor";
+import { setTagsAction } from "@/app/actions";
+import type { Tag } from "@/lib/tags";
 import { matches, muscleLine, REGIONS } from "@/lib/exercise-filter";
 
-export default function ExerciseBrowser({ exercises, muscles, isAdmin }: { exercises: ExerciseRow[]; muscles: MuscleRow[]; isAdmin: boolean }) {
+export default function ExerciseBrowser({ exercises, muscles, isAdmin, tagsByExercise, allTags }: { exercises: ExerciseRow[]; muscles: MuscleRow[]; isAdmin: boolean; tagsByExercise: Record<string, Tag[]>; allTags: string[] }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
   const [muscle, setMuscle] = useState("");
+  const [tag, setTag] = useState("");
+  const [tagMap, setTagMap] = useState(tagsByExercise);
+  const [names, setNames] = useState(allTags);
   const [region, setRegion] = useState<Region | "">("");
   const [equip, setEquip] = useState("");
   const [open, setOpen] = useState<ExerciseRow | null>(null);
   const uniq = (f: (e: ExerciseRow) => string | null) => [...new Set(exercises.map(f).filter(Boolean) as string[])].sort();
-  const list = useMemo(() => exercises.filter((e) => matches(e, { q, category: cat, muscle, equipment: equip, region })), [exercises, q, cat, muscle, equip, region]);
+  const list = useMemo(() => exercises.filter((e) => matches(e, { q, category: cat, muscle, equipment: equip, region }) && (!tag || (tagMap[e.id] ?? []).some((t) => t.name === tag))), [exercises, q, cat, muscle, equip, region, tag, tagMap]);
   const shownMuscles = muscles.filter((m) => !region || m.region === region);
   const sel = "input !w-auto flex-1 min-w-[7rem]";
   return (
@@ -28,13 +34,14 @@ export default function ExerciseBrowser({ exercises, muscles, isAdmin }: { exerc
         <select className={sel} value={region} onChange={(e) => { setRegion(e.target.value as Region | ""); setMuscle(""); }}><option value="">Region</option>{REGIONS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}</select>
         <select className={sel} value={cat} onChange={(e) => setCat(e.target.value)}><option value="">Category</option>{uniq((e) => e.category).map((c) => <option key={c}>{c}</option>)}</select>
         <select className={sel} value={muscle} onChange={(e) => setMuscle(e.target.value)}><option value="">Muscle</option>{shownMuscles.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        {names.length > 0 && <select className={sel} value={tag} onChange={(e) => setTag(e.target.value)}><option value="">My tag</option>{names.map((n) => <option key={n}>{n}</option>)}</select>}
         <select className={sel} value={equip} onChange={(e) => setEquip(e.target.value)}><option value="">Equipment</option>{uniq((e) => e.equipment).map((c) => <option key={c}>{c}</option>)}</select>
       </div>
       <div className="grid sm:grid-cols-2 gap-2">
         {list.map((e) => (
           <button key={e.id} className="card p-3 flex items-center gap-3 text-left min-h-16" onClick={() => setOpen(e)}>
             <Thumb path={e.imagePath} size={52} />
-            <div className="min-w-0"><div className="font-semibold truncate">{e.name}</div><div className="text-xs text-muted truncate">{muscleLine(e) || e.category}</div></div>
+            <div className="min-w-0"><div className="font-semibold truncate">{e.name}</div><div className="text-xs text-muted truncate">{muscleLine(e) || e.category}</div><TagChips tags={tagMap[e.id]} /></div>
           </button>
         ))}
       </div>
@@ -46,6 +53,14 @@ export default function ExerciseBrowser({ exercises, muscles, isAdmin }: { exerc
             {open.videoPath ? <video src={`/media/${open.videoPath}`} controls playsInline className="w-full rounded-xl bg-soft" /> : open.imagePath ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/media/${open.imagePath}`} alt="" className="w-full rounded-xl" /> : <div className="rounded-xl bg-soft aspect-video grid place-items-center"><Thumb size={64} /></div>}
             <div className="flex gap-2 flex-wrap"><span className="badge !bg-canvas !text-muted border border-stroke">{open.category}</span>{open.regions.map((g) => <span key={g} className="badge !bg-ink !text-white capitalize">{g}</span>)}{open.muscles.map((m) => <span key={m.id} className="badge">{m.name}</span>)}{open.equipment && <span className="badge">{open.equipment}</span>}</div>
             {open.instructions && <p className="text-muted">{open.instructions}</p>}
+            <TagEditor
+              value={(tagMap[open.id] ?? []).map((t) => t.name)}
+              suggestions={names}
+              onChange={async (next) => {
+                const r = await setTagsAction("exercise", open.id, next);
+                if (r.ok) { setTagMap((m) => ({ ...m, [open.id]: r.tags })); setNames((n) => [...new Set([...n, ...r.tags.map((t) => t.name)])].sort((a, b) => a.localeCompare(b))); }
+              }}
+            />
             <Link href={`/progress?ex=${open.id}`} className="btn w-full">History & PRs</Link>
           </div>
         </div>
