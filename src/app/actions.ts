@@ -169,20 +169,29 @@ export async function adminSaveExercise(_: unknown, fd: FormData): Promise<{ ok?
   try {
     const v = z.object({
       id: z.string().optional(), name: z.string().min(1).max(80), category: z.string().min(1).max(40),
-      muscle: z.string().max(40).optional(), equipment: z.string().max(40).optional(), instructions: z.string().max(600).optional(),
-    }).parse({ id: fd.get("id") || undefined, name: fd.get("name"), category: fd.get("category"), muscle: fd.get("muscle") ?? "", equipment: fd.get("equipment") ?? "", instructions: fd.get("instructions") ?? "" });
+      muscles: z.array(z.string()).max(12), equipment: z.string().max(40).optional(), instructions: z.string().max(600).optional(),
+    }).parse({ id: fd.get("id") || undefined, name: fd.get("name"), category: fd.get("category"), muscles: fd.getAll("muscles").map(String), equipment: fd.get("equipment") ?? "", instructions: fd.get("instructions") ?? "" });
     const img = await saveMedia(fd.get("image") as File | null, "image");
     const vid = await saveMedia(fd.get("video") as File | null, "video");
     if (img === "bad" || vid === "bad") return { error: "Images: JPEG/PNG/WebP ≤5 MB. Videos: MP4/WebM ≤40 MB." };
     const active = fd.get("active") === "on" ? 1 : 0;
+    const valid = new Set((db.prepare("SELECT id FROM muscles").all() as { id: string }[]).map((m) => m.id));
+    if (v.muscles.some((m) => !valid.has(m))) return { error: "Unknown muscle" };
+    if (!v.muscles.length) return { error: "Pick at least one muscle" };
+    let exId = v.id;
     if (v.id) {
-      db.prepare(`UPDATE exercises SET name=?, category=?, primary_muscle=?, equipment=?, instructions=?, active=?, updated_at=?,
+      db.prepare(`UPDATE exercises SET name=?, category=?, equipment=?, instructions=?, active=?, updated_at=?,
                   image_path=COALESCE(?, image_path), video_path=COALESCE(?, video_path) WHERE id=?`)
-        .run(v.name, v.category, v.muscle || null, v.equipment || null, v.instructions || null, active, new Date().toISOString(), img, vid, v.id);
+        .run(v.name, v.category, v.equipment || null, v.instructions || null, active, new Date().toISOString(), img, vid, v.id);
     } else {
-      db.prepare("INSERT INTO exercises (id,name,category,primary_muscle,equipment,instructions,image_path,video_path,active) VALUES (?,?,?,?,?,?,?,?,1)")
-        .run(uid(), v.name, v.category, v.muscle || null, v.equipment || null, v.instructions || null, img, vid);
+      exId = uid();
+      db.prepare("INSERT INTO exercises (id,name,category,equipment,instructions,image_path,video_path,active) VALUES (?,?,?,?,?,?,?,1)")
+        .run(exId, v.name, v.category, v.equipment || null, v.instructions || null, img, vid);
     }
+    db.transaction(() => {
+      db.prepare("DELETE FROM exercise_muscles WHERE exercise_id=?").run(exId);
+      for (const m of v.muscles) db.prepare("INSERT INTO exercise_muscles (exercise_id, muscle_id) VALUES (?,?)").run(exId, m);
+    })();
     revalidatePath("/exercises"); revalidatePath("/admin/exercises");
     return { ok: true };
   } catch (e: any) {

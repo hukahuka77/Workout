@@ -7,3 +7,4 @@ data/media
 .env.local
 *.tsbuildinfo
 next-env.d.ts
+data/*.bak*

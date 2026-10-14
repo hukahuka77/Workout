@@ -1,12 +1,29 @@
 import { getDb } from "./db";
 
-export type ExerciseRow = { id: string; name: string; category: string; muscle: string | null; equipment: string | null; instructions: string | null; imagePath: string | null; videoPath: string | null; active: number };
+export type Region = "upper" | "lower" | "core";
+export type MuscleRow = { id: string; name: string; region: Region };
+export type ExerciseRow = { id: string; name: string; category: string; muscles: MuscleRow[]; regions: Region[]; equipment: string | null; instructions: string | null; imagePath: string | null; videoPath: string | null; active: number };
+
+export function listMuscles(): MuscleRow[] {
+  return getDb().prepare("SELECT id, name, region FROM muscles ORDER BY sort_order").all() as MuscleRow[];
+}
 
 export function listExercises(includeInactive = false): ExerciseRow[] {
-  return getDb()
-    .prepare(`SELECT id, name, category, primary_muscle AS muscle, equipment, instructions, image_path AS imagePath, video_path AS videoPath, active
+  const db = getDb();
+  const rows = db
+    .prepare(`SELECT id, name, category, equipment, instructions, image_path AS imagePath, video_path AS videoPath, active
               FROM exercises ${includeInactive ? "" : "WHERE active=1"} ORDER BY category, name`)
-    .all() as ExerciseRow[];
+    .all() as any[];
+  const links = db
+    .prepare("SELECT em.exercise_id AS eid, m.id, m.name, m.region FROM exercise_muscles em JOIN muscles m ON m.id=em.muscle_id ORDER BY m.sort_order")
+    .all() as (MuscleRow & { eid: string })[];
+  const by = new Map<string, MuscleRow[]>();
+  for (const l of links) (by.get(l.eid) ?? by.set(l.eid, []).get(l.eid)!).push({ id: l.id, name: l.name, region: l.region });
+  const order: Region[] = ["upper", "core", "lower"];
+  return rows.map((r) => {
+    const muscles = by.get(r.id) ?? [];
+    return { ...r, muscles, regions: order.filter((g) => muscles.some((m) => m.region === g)) };
+  });
 }
 
 export function listWorkouts(userId: string, archived = false) {

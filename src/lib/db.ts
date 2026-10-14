@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
-import { seedExercises } from "./seed-data";
+import { seedExercises, linkSeedMuscles } from "./seed-data";
 
 const MIGRATIONS_DIR = path.join(process.cwd(), "migrations");
 
@@ -38,6 +38,7 @@ export function getDb(): Database.Database {
   if (!g.__db) {
     g.__db = open(process.env.DATABASE_PATH || path.join(process.cwd(), "data", "workout.db"));
     seedExercises(g.__db);
+    linkSeedMuscles(g.__db);
   }
   return g.__db;
 }

@@ -64,3 +64,70 @@ export function seedExercises(db: import("better-sqlite3").Database) {
     for (const [name, cat, muscle, eq, ins_] of SEED_EXERCISES) ins.run(crypto.randomUUID(), name, cat, muscle, eq, ins_);
   })();
 }
+
+/** Primary muscles worked per seeded exercise (muscle ids from migrations/002_muscles.sql). */
+export const SEED_MUSCLES: Record<string, string[]> = {
+  "Barbell Bench Press": ["chest", "front_delt", "triceps"],
+  "Incline Dumbbell Press": ["upper_chest", "front_delt", "triceps"],
+  "Push-up": ["front_delt", "upper_chest", "triceps"],
+  "Dumbbell Fly": ["chest", "upper_chest"],
+  "Cable Crossover": ["chest", "upper_chest"],
+  "Overhead Press": ["front_delt", "side_delt", "triceps"],
+  "Dumbbell Shoulder Press": ["front_delt", "side_delt", "triceps"],
+  "Lateral Raise": ["side_delt"],
+  "Face Pull": ["rear_delt", "upper_back"],
+  "Rear Delt Fly": ["rear_delt", "upper_back"],
+  "Deadlift": ["glutes", "hamstrings", "lower_back", "upper_back"],
+  "Romanian Deadlift": ["hamstrings", "glutes", "lower_back"],
+  "Pull-up": ["lats", "biceps", "upper_back"],
+  "Chin-up": ["lats", "biceps"],
+  "Lat Pulldown": ["lats", "biceps"],
+  "Barbell Row": ["lats", "upper_back", "biceps"],
+  "One-arm Dumbbell Row": ["lats", "upper_back", "biceps"],
+  "Seated Cable Row": ["upper_back", "lats", "biceps"],
+  "Back Squat": ["quads", "glutes"],
+  "Front Squat": ["quads", "glutes"],
+  "Goblet Squat": ["quads", "glutes"],
+  "Bulgarian Split Squat": ["quads", "glutes"],
+  "Walking Lunge": ["quads", "glutes", "hamstrings"],
+  "Leg Press": ["quads", "glutes"],
+  "Leg Extension": ["quads"],
+  "Leg Curl": ["hamstrings"],
+  "Hip Thrust": ["glutes", "hamstrings"],
+  "Glute Bridge": ["glutes"],
+  "Standing Calf Raise": ["calves"],
+  "Barbell Curl": ["biceps"],
+  "Dumbbell Hammer Curl": ["biceps", "forearms"],
+  "Triceps Pushdown": ["triceps"],
+  "Skull Crusher": ["triceps"],
+  "Dip": ["triceps", "chest", "front_delt"],
+  "Plank": ["abs", "obliques"],
+  "Side Plank": ["obliques"],
+  "Hanging Leg Raise": ["abs", "hip_flexors"],
+  "Cable Crunch": ["abs"],
+  "Dead Bug": ["abs"],
+  "Farmer's Carry": ["forearms", "upper_back", "obliques"],
+  "Cat-Cow": ["lower_back", "upper_back"],
+  "Child's Pose": ["lower_back", "lats"],
+  "World's Greatest Stretch": ["hip_flexors", "hamstrings", "glutes"],
+  "90/90 Hip Switch": ["glutes", "hip_flexors"],
+  "Thoracic Rotation": ["upper_back", "obliques"],
+  "Hip Flexor Stretch": ["hip_flexors"],
+  "Hamstring Stretch": ["hamstrings"],
+  "Shoulder Dislocate": ["front_delt", "rear_delt"],
+  "Couch Stretch": ["quads", "hip_flexors"],
+  "Ankle Dorsiflexion Rock": ["calves"],
+  "Foam Roll Upper Back": ["upper_back"],
+  "Pigeon Pose": ["glutes", "hip_flexors"],
+  "Jump Rope": ["calves"],
+  "Rowing Machine": ["lats", "quads", "hamstrings"],
+};
+
+/** Link seeded exercises to their muscles when they have none yet (idempotent; leaves admin edits alone). */
+export function linkSeedMuscles(db: import("better-sqlite3").Database) {
+  const rows = db.prepare("SELECT id, name FROM exercises e WHERE NOT EXISTS (SELECT 1 FROM exercise_muscles m WHERE m.exercise_id = e.id)").all() as { id: string; name: string }[];
+  const ins = db.prepare("INSERT OR IGNORE INTO exercise_muscles (exercise_id, muscle_id) VALUES (?, ?)");
+  db.transaction(() => {
+    for (const r of rows) for (const m of SEED_MUSCLES[r.name] ?? []) ins.run(r.id, m);
+  })();
+}
