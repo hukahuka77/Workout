@@ -24,12 +24,8 @@ export default function ExerciseBrowser({ exercises, muscles, isAdmin }: { exerc
         {isAdmin && <Link href="/admin/exercises" className="btn">Manage</Link>}
       </div>
       <div className="relative"><Search size={16} className="absolute left-3 top-3.5 text-muted" /><input className="input pl-9" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-      <div className="flex gap-2">
-        {[{ id: "", label: "All" }, ...REGIONS].map((g) => (
-          <button key={g.id} onClick={() => { setRegion(g.id as Region | ""); setMuscle(""); }} className={`flex-1 min-h-11 rounded-xl text-sm font-semibold border ${region === g.id ? "bg-ink text-white border-ink" : "bg-surface border-stroke text-ink"}`}>{g.label}</button>
-        ))}
-      </div>
       <div className="flex gap-2 flex-wrap">
+        <select className={sel} value={region} onChange={(e) => { setRegion(e.target.value as Region | ""); setMuscle(""); }}><option value="">Region</option>{REGIONS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}</select>
         <select className={sel} value={cat} onChange={(e) => setCat(e.target.value)}><option value="">Category</option>{uniq((e) => e.category).map((c) => <option key={c}>{c}</option>)}</select>
         <select className={sel} value={muscle} onChange={(e) => setMuscle(e.target.value)}><option value="">Muscle</option>{shownMuscles.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
         <select className={sel} value={equip} onChange={(e) => setEquip(e.target.value)}><option value="">Equipment</option>{uniq((e) => e.equipment).map((c) => <option key={c}>{c}</option>)}</select>
